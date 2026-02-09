@@ -1,0 +1,21 @@
+# Python (скомпільовані файли)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Віртуальне оточення (ОБОВ'ЯЗКОВО!)
+venv/
+.venv/
+env/
+
+# Системні файли (Windows/Mac)
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Налаштування редактора (не обов'язково всім бачити ваші налаштування)
+.vscode/
+.idea/
+
+# Логи Odoo
+*.log
