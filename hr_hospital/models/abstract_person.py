@@ -1,7 +1,7 @@
 from odoo import models, fields, api
 
 class AbstractPerson(models.AbstractModel):
-    _name = 'hr.hospital.abstract.person'
+    _name = 'hr_hospital.abstract_person'
     _description = 'Person'
     _inherit = 'image.mixin'
 
