@@ -2,3 +2,10 @@ from . import abstract_person
 from . import doctor
 from . import patient
 from . import contact_person
+from . import diagnosis
+from . import disease
+from . import doctor_specialty
+from . import doctor_work_graphic
+from . import patient_visits
+from . import account_move_line
+from . import account_move
