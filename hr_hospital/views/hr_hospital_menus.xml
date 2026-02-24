@@ -14,20 +14,15 @@
 
     <menuitem id="menu_hr_hospital_root" name="Hospital" sequence="10"/>
 
-    <menuitem id="menu_hr_hospital_registry"
-              name="Registry"
-              parent="menu_hr_hospital_root"
-              sequence="10"/>
-
     <menuitem id="menu_hospital_doctor"
               name="Doctors"
-              parent="menu_hr_hospital_registry"
+              parent="menu_hr_hospital_root"
               action="action_hospital_doctor"
               sequence="10"/>
 
     <menuitem id="menu_hospital_patient"
               name="Patients"
-              parent="menu_hr_hospital_registry"
+              parent="menu_hr_hospital_root"
               action="action_hospital_patient"
               sequence="20"/>
 </odoo>
