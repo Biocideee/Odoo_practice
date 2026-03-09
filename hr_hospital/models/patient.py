@@ -42,8 +42,6 @@ class Patient(models.Model):
     personal_doctor_history_ids = fields.One2many('hr_hospital.personal_doctor_history',
                                                   'doctor_id',
                                                   string='Personal Doctor History')
-    # Зображення
-    image = fields.Image(string='Image')
 
     # Картка пацієнта
     visit_count = fields.Integer(string='Visits Count', compute='_compute_visit_count')

@@ -6,3 +6,4 @@ access_hr_hospital_patient_visits,hr_hospital.patient_visits,model_hr_hospital_p
 access_hr_hospital_diagnosis,hr_hospital.diagnosis,model_hr_hospital_diagnosis,,1,1,1,1
 access_hr_hospital_doctor_schedule,hr_hospital.doctor_schedule,model_hr_hospital_doctor_schedule,,1,1,1,1
 access_hr_hospital_disease,hr_hospital.disease,model_hr_hospital_disease,,1,1,1,1
+access_hr_hospital_doctor_specialty,hr_hospital.doctor_specialty,model_hr_hospital_doctor_specialty,,1,1,1,1

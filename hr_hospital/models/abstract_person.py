@@ -50,3 +50,6 @@ class AbstractPerson(models.AbstractModel):
         for record in self:
             parts = [record.last_name, record.first_name, record.middle_name]
             record.full_name = " ".join([part for part in parts if part])
+
+    # Зображення
+    image = fields.Image(string='Image')

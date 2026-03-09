@@ -9,7 +9,7 @@
               name="Visits"
               parent="menu_hr_hospital_root"
               action="action_visits"
-              sequence="10"/>
+              sequence="15"/>
 
     <menuitem id="menu_hospital_patients"
               name="Patients"

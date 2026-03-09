@@ -1,4 +1,5 @@
 from . import abstract_person
+from . import account_move_line
 from . import contact_person
 from . import diagnosis
 from . import disease
