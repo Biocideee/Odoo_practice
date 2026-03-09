@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- КАНБАН -->
+    <record id="view_patient_kanban" model="ir.ui.view">
+        <field name="name">hr.hospital.patient.kanban</field>
+        <field name="model">hr_hospital.patient</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="id"/>
+                <field name="image"/>
+                <field name="full_name"/>
+                <field name="phone_number"/>
+
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex">
+
+                            <div class="me-3"><field name="image" widget="image" class="o_kanban_image"
+                                                     options="{'size': [70, 70]}"/>
+                            </div>
+
+                            <div class="d-flex flex-column justify-content-center">
+                                <strong class="o_kanban_record_title fs-5 mb-1">
+                                    <field name="full_name"/>
+                                </strong>
+                                <div class="text-muted">
+                                    <field name="phone_number"/>
+                                </div>
+                            </div>
+
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- СПИСОК -->
+
+    <record id="view_patient_list" model="ir.ui.view">
+        <field name="name">hr.hospital.patient.list</field>
+        <field name="model">hr_hospital.patient</field>
+        <field name="arch" type="xml">
+            <list string="Patients">
+                <field name="first_name"/>
+                <field name="last_name"/>
+                <field name="phone_number"/>
+                <field name="date_of_birth"/>
+                <field name="gender"/>
+                <field name="age"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ФОРМА -->
+
+    <record id="view_patient_form" model="ir.ui.view">
+        <field name="name">hr.hospital.patient.form</field>
+        <field name="model">hr_hospital.patient</field>
+        <field name="arch" type="xml">
+            <form string="Patient">
+
+                <header string="Patient">
+                    <button name="%(hr_hospital.action_visits)d"
+                            type="action"
+                            string="Schedule Visit"
+                            class="o_embedded_toc_header_highlight"
+                            context="{'default_patient_id' : id}"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(hr_hospital.action_visits)d"
+                                type="action"
+                                class="oe_stat_button"
+                                icon="fa-stethoscope">
+                            <field name="visit_count" widget="statinfo" string="Visits"/>
+                        </button>
+                    </div>
+
+                    <field name="image" widget="image" class="oe_avatar"/>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="full_name" placeholder="Full name"/>
+                        </h1>
+                        <h3>
+                            <field name="phone_number" placeholder="Phone number"/>
+                        </h3>
+                    </div>
+
+                    <notebook>
+                        <page string="Personal data">
+                            <group>
+                                <group>
+                                    <field name="first_name"/>
+                                    <field name="last_name"/>
+                                    <field name="middle_name"/>
+                                </group>
+
+                                <group>
+                                    <field name="phone_number"/>
+                                    <field name="date_of_birth"/>
+                                    <field name="gender"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Medical card">
+                            <group>
+                                <group string="Basic Info">
+                                    <field name="blood_type"/>
+                                    <field name="allergies" widget="text"/>
+                                </group>
+
+                                <group string="Hospital Data">
+                                    <field name="personal_doctor_id"></field>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Diagnosis History">
+                            <field name="diagnosis_ids" readonly="1">
+                                <list>
+                                    <field name="disease_id"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Administrative">
+                            <group>
+                                <group string="Documents">
+                                    <field name="passport_data"/>
+                                    <field name="contact_person_id"/>
+                                </group>
+                                <group string="Insurance">
+                                    <field name="insurance_company_id"></field>
+                                    <field name="insurance_policy_number"></field>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ПОШУК -->
+
+    <record id="view_patient_search" model="ir.ui.view">
+        <field name="name">hr.hospital.patient.search</field>
+        <field name="model">hr_hospital.patient</field>
+        <field name="arch" type="xml">
+            <search string="Search Patients">
+                <field name="full_name"
+                       filter_domain="['|', ('full_name', 'ilike', self), ('phone_number', 'ilike', self)]"/>
+                <field name="phone_number"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- ДІЯ -->
+
+    <record id="action_patients" model="ir.actions.act_window">
+        <field name="name">Patients</field>
+        <field name="res_model">hr_hospital.patient</field>
+        <field name="view_mode">list,kanban,form</field>
+    </record>
+</odoo>

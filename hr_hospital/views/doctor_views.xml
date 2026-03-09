@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!-- ПОШУК -->
+
+    <record id="view_doctor_search" model="ir.ui.view">
+        <field name="name">hr.hospital.doctor.search</field>
+        <field name="model">hr_hospital.doctor</field>
+        <field name="arch" type="xml">
+            <search string="Search Doctors">
+                <field name="full_name"/>
+                <field name="specialty_id"/>
+                <filter string="Interns" name="filter_interns" domain="[('is_intern', '=', True)]"/>
+                <filter string="Mentors" name="filter_mentors" domain="[('intern_ids', '!=', False)]"/>
+
+                <group>
+                    <filter string="Specialty" name="group_by_specialty" context="{'group_by' : 'specialty_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ДІЯ -->
+
+    <record id="action_doctors" model="ir.actions.act_window">
+        <field name="name">Doctors</field>
+        <field name="res_model">hr_hospital.doctor</field>
+        <field name="view_mode">list,form,search</field>
+    </record>
+</odoo>

@@ -6,7 +6,7 @@ class DoctorSchedule(models.Model):
     _description = 'Doctor Schedule'
 
     # Лікар
-    doctor = fields.Many2one('hr_hospital.doctor', required=True)
+    doctor_id = fields.Many2one('hr_hospital.doctor', required=True)
 
     # День тижня
     day_of_week = fields.Selection([('MON', 'Monday'),

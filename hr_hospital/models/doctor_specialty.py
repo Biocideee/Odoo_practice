@@ -18,4 +18,4 @@ class DoctorSpecialty(models.Model):
     is_active = fields.Boolean(string='Active', default=True)
 
     # Лікарі
-    doctors_ids = fields.One2many('hr_hospital.doctor', string='Doctors')
+    doctor_ids = fields.One2many('hr_hospital.doctor', 'specialty_id', string='Doctors')

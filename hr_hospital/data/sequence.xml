@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data noupdate="1">
+        <record id="sequence_patient_visit" model="ir.sequence">
+            <field name="name">Нумерація візитів</field>
+            <field name="code">hr_hospital.patient_visits.sequence</field>
+            <field name="prefix">VST/%(year)s/</field>
+            <field name="padding">4</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+    </data>
+</odoo>

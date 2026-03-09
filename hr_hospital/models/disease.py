@@ -1,7 +1,7 @@
 from odoo import fields, models
 
 
-class Desease(models.Model):
+class Disease(models.Model):
     _name = 'hr_hospital.disease'
     _description = 'Disease'
 
@@ -9,7 +9,7 @@ class Desease(models.Model):
     parental_disease_id = fields.Many2one('hr_hospital.disease', string='Parental Disease')
 
     # Дочірня хвороба
-    child_disease_ids = fields.One2many('hr_hospital.disease', string='Child Disease')
+    child_disease_ids = fields.One2many('hr_hospital.disease','parental_disease_id', string='Child Disease')
 
     # Код МКХ-10
     ICD_10_code = fields.Char(string='ICD 10', size=10)
@@ -27,4 +27,4 @@ class Desease(models.Model):
     symptoms = fields.Text(string='Symptoms')
 
     # Регіон поширення
-    destribution_region_ids = fields.Many2many('res.country', string='Destribution Regions')
+    distribution_region_ids = fields.Many2many('res.country', string='Distribution Regions')

@@ -5,6 +5,7 @@ class Patient(models.Model):
     _name = 'hr_hospital.patient'
     _description = 'Patient'
     _inherit = 'hr_hospital.abstract_person'
+    _rec_name = 'full_name'
 
     # Персональний лікар
     personal_doctor_id = fields.Many2one('hr_hospital.doctor', string='Personal Doctor')
@@ -39,4 +40,26 @@ class Patient(models.Model):
 
     # Історія персональних лікарів
     personal_doctor_history_ids = fields.One2many('hr_hospital.personal_doctor_history',
+                                                  'doctor_id',
                                                   string='Personal Doctor History')
+    # Зображення
+    image = fields.Image(string='Image')
+
+    # Картка пацієнта
+    visit_count = fields.Integer(string='Visits Count', compute='_compute_visit_count')
+
+    # Функція, яка рахує кількість візитів цього пацієнта в базі
+    def _compute_visit_count(self):
+        for record in self:
+            record.visit_count = self.env['hr_hospital.patient_visits'].search_count([('patient_id', '=', record.id)])
+
+    # Зв'язок з усіма візитами цього пацієнта
+    visit_ids = fields.One2many('hr_hospital.patient_visits', 'patient_id', string='Visits')
+
+    # Зв'язок з усіма діагнозами через візити
+    diagnosis_ids = fields.Many2many('hr_hospital.diagnosis', string='Diagnosis History', compute='_compute_diagnoses')
+
+    # Функція, яка збирає всі діагнози з усіх візитів пацієнта
+    def _compute_diagnoses(self):
+        for record in self:
+            record.diagnosis_ids = record.visit_ids.mapped('diagnosis_ids')

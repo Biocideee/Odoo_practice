@@ -13,12 +13,22 @@ class PatientVisits(models.Model):
         ('didnt_appear', 'Did not appear'),
     ], string='Patient Visits Status')
 
+    # Ім'я візиту, яке Оду підтягує замість випадкового ідентифікатора
+    name = fields.Char(string='Visit', required=True, copy=False, readonly=True, default='New')
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('name', 'New') == 'New':
+                vals['name'] = self.env['ir.sequence'].next_by_code('hr_hospital.patient_visits.sequence') or 'New'
+
+        return super(PatientVisits, self).create(vals_list)
+
     # Заплановані дата та час
-    Planned_Date_and_time = fields.Datetime(string='Date and Time')
+    planned_date_and_time = fields.Datetime(string='Date and Time')
 
     # Фактичні дата та час
-    Actual_Date_and_time = fields.Datetime(string='Actual Date and Time',
-                                           readonly=True if visit_status == 'Completed' or visit_status == 'completed' else False)
+    actual_date_and_time = fields.Datetime(string='Actual Date and Time')
     # Лікар
     doctor_id = fields.Many2one('hr_hospital.doctor', required=True)
 
@@ -32,13 +42,13 @@ class PatientVisits(models.Model):
                                       ('urgent', 'Urgent')])
 
     # Діагнози
-    diagnosis_ids = fields.One2many('hr_hospital.diagnosis', string='Diagnosis')
+    diagnosis_ids = fields.One2many('hr_hospital.diagnosis', 'visit_id', string='Diagnosis')
 
     # Рекомендації
     recommendations = fields.Html(string='Recommendations')
 
     # Вартість візиту
-    value_of_visit = fields.Monetary(currency_field='Гривні', string='Value')
+    value_of_visit = fields.Monetary(string='Value')
 
     # Валюта
     currency_id = fields.Many2one('res.currency', required=True)

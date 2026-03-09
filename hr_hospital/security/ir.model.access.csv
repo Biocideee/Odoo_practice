@@ -2,3 +2,7 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_hr_hospital_doctor,hr_hospital.doctor,model_hr_hospital_doctor,,1,1,1,1
 access_hr_hospital_patient,hr_hospital.patient,model_hr_hospital_patient,,1,1,1,1
 access_hr_hospital_contact_person,hr_hospital.contact_person,model_hr_hospital_contact_person,,1,1,1,1
+access_hr_hospital_patient_visits,hr_hospital.patient_visits,model_hr_hospital_patient_visits,,1,1,1,1
+access_hr_hospital_diagnosis,hr_hospital.diagnosis,model_hr_hospital_diagnosis,,1,1,1,1
+access_hr_hospital_doctor_schedule,hr_hospital.doctor_schedule,model_hr_hospital_doctor_schedule,,1,1,1,1
+access_hr_hospital_disease,hr_hospital.disease,model_hr_hospital_disease,,1,1,1,1
