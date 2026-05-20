@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="plugit_checkbox.OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension">
+
+        <xpath expr="//div[hasclass('before-footer')]" position="after">
+            <t t-if="order.checkbox_receipt_id">
+                <div style="text-align: center; margin-top: 15px; border-top: 1px dashed black; padding-top: 10px; font-family: monospace;">
+                    <strong>ФІСКАЛЬНИЙ ЧЕК CHECKBOX</strong>
+                    <br/>
+                    ID: <t t-esc="order.checkbox_receipt_id"/>
+                </div>
+            </t>
+        </xpath>
+
+    </t>
+</templates>

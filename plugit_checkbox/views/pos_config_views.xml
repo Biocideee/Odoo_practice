@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="pos_config_view_form_inherit_checkbox" model="ir.ui.view">
+        <field name="name">pos.config.view.form.inherit.checkbox</field>
+        <field name="model">pos.config</field>
+        <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="o_setting_box" id="checkbox_prro_settings"
+                     style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 4px;">
+                    <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Інтеграція з ПРРО Checkbox</h2>
+                    <div class="o_setting_right_pane">
+                        <label for="checkbox_license_key" string="Ключ ліцензії каси Checkbox"
+                               style="font-weight: 500;"/>
+                        <div class="text-muted">Вкажіть ключ ліцензії з особистого кабінету ПРРО</div>
+                        <field name="checkbox_license_key" style="width: 100%; max-width: 400px; margin-top: 5px;"/>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
