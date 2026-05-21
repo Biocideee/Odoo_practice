@@ -15,16 +15,15 @@ patch(PaymentScreen.prototype, {
         let token = session ? session.checkbox_access_token : null;
         const licenseKey = config ? config.checkbox_license_key : null;
 
-        // ==========================================
-        // НОВИЙ БЛОК: Синхронізація токена з бекендом
-        // Якщо токена немає, але зміна відкрита, запитуємо його з БД
-        // ==========================================
         if (!token && session && session.id) {
             try {
-                const sessionData = await this.env.services.orm.read('pos.session', [session.id], ['checkbox_access_token']);
+                const sessionData = await this.env.services.orm.read(
+                    'pos.session', [session.id], ['checkbox_access_token']
+                );
                 if (sessionData && sessionData.length > 0 && sessionData[0].checkbox_access_token) {
                     token = sessionData[0].checkbox_access_token;
-                    session.checkbox_access_token = token; // Зберігаємо в пам'яті браузера
+                    // Кешуємо токен у JS, щоб наступні чеки не робили цей запит
+                    session.checkbox_access_token = token;
                 }
             } catch (e) {
                 console.warn("Помилка синхронізації токена з бекенду:", e);
@@ -43,12 +42,10 @@ patch(PaymentScreen.prototype, {
             const rawCode = product.default_code || product.id?.toString() || '000';
             const cleanCode = rawCode.replace(/[^a-zA-Z0-9]/g, '');
 
-            // Використовуємо знайдений метод getQuantity()
             const quantity = typeof line.getQuantity === 'function' ? line.getQuantity() : (line.qty || 1);
 
             let unitPriceWithTax = 0;
 
-            // 1. Спершу намагаємося дістати фінальну суму з ПДВ з об'єкта prices (який ми знайшли в getTip)
             if (line.prices) {
                 const totalWithTax = line.prices.total_included_currency || line.prices.total_included || line.prices.total_with_tax || 0;
                 if (totalWithTax) {
@@ -56,26 +53,22 @@ patch(PaymentScreen.prototype, {
                 }
             }
 
-            // 2. Якщо об'єкта prices немає, використовуємо displayPriceUnit (знайдено в getTotalDiscount)
             if (!unitPriceWithTax && line.displayPriceUnit) {
                 unitPriceWithTax = line.displayPriceUnit;
             }
 
-            // 3. Базовий фоллбек на чисту ціну (знайдено в setUnitPrice)
             if (!unitPriceWithTax) {
                 unitPriceWithTax = line.price_unit || 0;
             }
 
-            // Залізобетонний захист: Checkbox викидає помилку 422, якщо ціна <= 0
             if (unitPriceWithTax <= 0) {
                 unitPriceWithTax = 0.01;
             }
-
+            
             return {
                 good: {
                     code: cleanCode,
                     name: product.display_name || product.name || "Товар",
-                    // Переводимо у копійки для Checkbox
                     price: Math.round(unitPriceWithTax * 100)
                 },
                 quantity: Math.round(quantity * 1000)
@@ -83,6 +76,7 @@ patch(PaymentScreen.prototype, {
         });
 
         const paymentLines = order.payment_ids || (typeof order.get_paymentlines === 'function' ? order.get_paymentlines() : []);
+
         const payments = paymentLines.map(p => {
             const method = p.payment_method_id || p.payment_method;
             const isCash = method?.is_cash_count;
@@ -144,6 +138,20 @@ patch(PaymentScreen.prototype, {
 });
 
 patch(PosOrder.prototype, {
+    setup(data) {
+        super.setup(...arguments);
+        this.checkbox_receipt_id = data.checkbox_receipt_id || this.checkbox_receipt_id || null;
+        this.checkbox_receipt_url = data.checkbox_receipt_url || this.checkbox_receipt_url || null;
+    },
+
+    init_from_JSON(json) {
+        super.init_from_JSON(...arguments);
+        if (json.checkbox_receipt_id) {
+            this.checkbox_receipt_id = json.checkbox_receipt_id;
+            this.checkbox_receipt_url = json.checkbox_receipt_url;
+        }
+    },
+
     export_as_JSON() {
         const json = super.export_as_JSON(...arguments);
         json.checkbox_receipt_url = this.checkbox_receipt_url;
