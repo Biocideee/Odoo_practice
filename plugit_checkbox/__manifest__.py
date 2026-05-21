@@ -1,11 +1,12 @@
 {
     'name': 'Plugit Checkbox POS',
-    'version': '1.0',    'category': 'Point of Sale',
+    'version': '1.0', 'category': 'Point of Sale',
     'summary': 'Integration of Odoo POS with Checkbox (Cloud Signature)',
     'depends': ['point_of_sale'],
     'data': [
         'views/pos_config_views.xml',
         'views/res_users_views.xml',
+        'data/ir_cron_data.xml',
     ],
     'assets': {
         'point_of_sale._assets_pos': [

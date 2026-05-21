@@ -16,7 +16,7 @@ import logging
 
 import requests
 
-from odoo import fields, models
+from odoo import fields, models, api
 from odoo.exceptions import UserError
 
 # Створюємо екземпляр логера для цього файлу.
@@ -88,7 +88,7 @@ class PosSession(models.Model):
             # Це забезпечує, що зміна відкриється незалежно від того,
             # чи є у користувача екран контролю готівки.
             if (session.config_id.checkbox_license_key and not
-                    session.checkbox_access_token):
+            session.checkbox_access_token):
                 try:
                     session._checkbox_init_and_open_shift()
                 except UserError as e:
@@ -241,14 +241,13 @@ class PosSession(models.Model):
 
     def _checkbox_close_shift_and_signout(self):
         """
-        Основний метод для закриття зміни, створення Z-звіту та виходу касира.
+        Основний метод для закриття зміни та виходу касира.
         """
         self.ensure_one()
 
         # Отримуємо свіжий токен перед важливими операціями.
         token = self._checkbox_get_fresh_token()
         if not token:
-            # Якщо токен не отримано, просто стираємо старий і виходимо.
             self.sudo().write({'checkbox_access_token': False})
             return
 
@@ -258,95 +257,95 @@ class PosSession(models.Model):
         }
 
         try:
-            # Крок 1: Закриття зміни (створення Z-звіту).
+            # Крок 1: Закриття зміни.
             report_resp = requests.post(
                 "https://api.checkbox.ua/api/v1/shifts/close",
                 headers=headers,
                 timeout=20,
             )
+
             if report_resp.status_code in [200, 201, 202]:
-                _logger.info(
-                    f"Checkbox: зміну успішно закрито для сесії {self.name}."
+                _logger.info(f"Checkbox: зміну успішно закрито для сесії {self.name}.")
+
+                # Крок 2: Викликаємо окремий метод для отримання Z-звіту
+                self._checkbox_fetch_z_report(headers, report_resp.json())
+
+            # ОБРОБКА ВИНЯТКУ: Якщо спрацювало автозакриття Checkbox (Fallback)
+            elif report_resp.status_code in [400, 422] and "already_closed" in report_resp.text.lower():
+                _logger.warning(
+                    f"Checkbox: зміна вже закрита для сесії {self.name} (можливо, через автозакриття). "
+                    f"Пропускаємо фіскальне закриття і продовжуємо закривати сесію в Odoo."
                 )
-
-                # Крок 2: Завантаження та збереження Z-звіту.
-                try:
-                    shift_data = report_resp.json()
-                    z_report = shift_data.get('z_report', {})
-                    report_id = z_report.get('id')
-
-                    if report_id:
-                        # Отримуємо текстову версію звіту.
-                        text_url = (f"https://api.checkbox.ua/api/v1/reports/"
-                                    f"{report_id}/text")
-                        text_resp = requests.get(text_url, headers=headers,
-                                                 timeout=10)
-
-                        if text_resp.status_code == 200:
-                            report_content = text_resp.text
-                            # Кодуємо контент в base64 для збереження в Odoo.
-                            encoded_content = base64.b64encode(
-                                report_content.encode('utf-8'))
-
-                            # Створюємо безпечне ім'я файлу.
-                            safe_name = self.name.replace('/', '_')
-                            # Створюємо запис в моделі `ir.attachment`.
-                            self.env['ir.attachment'].create({
-                                'name': f'Z_Report_{safe_name}.txt',
-                                'type': 'binary',
-                                'datas': encoded_content,
-                                'res_model': 'pos.session',
-                                'res_id': self.id,
-                                'mimetype': 'text/plain'
-                            })
-                            _logger.info(
-                                f"Z-звіт збережено як прикріплення до сесії "
-                                f"{self.name}"
-                            )
-                        else:
-                            _logger.warning(
-                                f"Не вдалося завантажити текст Z-звіту. "
-                                f"HTTP {text_resp.status_code}"
-                            )
-                except Exception as e:
-                    _logger.error(
-                        f"Помилка при збереженні Z-звіту як аттачменту: {e}"
-                    )
 
             else:
                 _logger.error(
-                    f"Checkbox: помилка при закритті сесії {self.name}: "
-                    f"{report_resp.text}"
-                )
-
-            # Крок 3: Вихід касира (Sign Out).
-            signout_url = "https://api.checkbox.ua/api/v1/cashier/signout"
-            try:
-                signout_resp = requests.post(signout_url, headers=headers,
-                                             json={}, timeout=10)
-
-                if signout_resp.ok:
-                    _logger.info(
-                        f"Checkbox: касир успішно вийшов (Sign Out) для сесії "
-                        f"{self.name}."
-                    )
-                else:
-                    _logger.warning(
-                        f"Checkbox: помилка при Sign Out "
-                        f"(HTTP {signout_resp.status_code}): "
-                        f"{signout_resp.text}"
-                    )
-            except Exception as e:
-                _logger.error(
-                    f"Checkbox: помилка з'єднання при Sign Out: {e}"
+                    f"Checkbox: помилка при закритті сесії {self.name}: {report_resp.text}"
                 )
 
         except requests.exceptions.RequestException as e:
-            _logger.error(f"Checkbox: критична помилка зв'язку: {e}")
+            _logger.error(f"Checkbox: критична помилка зв'язку при закритті зміни: {e}")
+
+        # Крок 3: Вихід касира (Sign Out).
+        # Цей блок завжди виконується, навіть якщо зміна вже була закрита
+        signout_url = "https://api.checkbox.ua/api/v1/cashier/signout"
+        try:
+            signout_resp = requests.post(
+                signout_url,
+                headers=headers,
+                json={},
+                timeout=10
+            )
+
+            if signout_resp.ok:
+                _logger.info(f"Checkbox: касир успішно вийшов з сесії {self.name}.")
+            else:
+                _logger.warning(
+                    f"Checkbox: помилка при виході (HTTP {signout_resp.status_code}): {signout_resp.text}"
+                )
+        except Exception as e:
+            _logger.error(f"Checkbox: помилка з'єднання при виході: {e}")
         finally:
-            # `finally` блок виконується завжди, незалежно від помилок.
-            # Це гарантує, що токен буде стерто з сесії Odoo.
+            # Гарантуємо очищення токена
             self.sudo().write({'checkbox_access_token': False})
+
+    def _checkbox_fetch_z_report(self, headers, shift_data):
+        """
+        Метод для завантаження текстового Z-звіту та прикріплення його до сесії.
+        """
+        import time
+        try:
+            z_report = shift_data.get('z_report', {})
+            report_id = z_report.get('id')
+
+            if not report_id:
+                _logger.warning(f"Checkbox: Z-звіт не повернув ID для сесії {self.name}.")
+                return
+
+            # Пауза 1 секунда, щоб Checkbox встиг згенерувати звіт
+            time.sleep(1)
+
+            text_url = f"https://api.checkbox.ua/api/v1/reports/{report_id}/text"
+            text_resp = requests.get(text_url, headers=headers, timeout=10)
+
+            if text_resp.status_code == 200:
+                report_content = text_resp.text
+                encoded_content = base64.b64encode(report_content.encode('utf-8'))
+                safe_name = self.name.replace('/', '_')
+
+                self.env['ir.attachment'].create({
+                    'name': f'Z_Report_{safe_name}.txt',
+                    'type': 'binary',
+                    'datas': encoded_content,
+                    'res_model': 'pos.session',
+                    'res_id': self.id,
+                    'mimetype': 'text/plain'
+                })
+                _logger.info(f"Z-звіт успішно збережено як прикріплення до сесії {self.name}")
+            else:
+                _logger.warning(f"Не вдалося завантажити текст Z-звіту. HTTP {text_resp.status_code}: {text_resp.text}")
+
+        except Exception as e:
+            _logger.error(f"Помилка при збереженні Z-звіту як аттачменту: {e}")
 
     def _load_pos_data_fields(self, config_id):
         """
@@ -361,3 +360,28 @@ class PosSession(models.Model):
             result['pos.order'].extend(
                 ['checkbox_receipt_id', 'checkbox_receipt_url'])
         return result
+
+    @api.model
+    def cron_close_overdue_sessions(self):
+        """Метод, який викликається Кроном щоночі для закриття сесій"""
+        _logger.info("Крон ПРРО: Початок перевірки відкритих сесій POS...")
+
+        # Знаходимо всі сесії які зараз відкриті (status = 'opened')
+        opened_sessions = self.search([('state', '=', 'opened')])
+
+        for session in opened_sessions:
+            _logger.info(f"Крон ПРРО: Автоматично закриваємо забуту сесію {session.name}")
+            try:
+                # Викликаємо наш стандартний метод закриття сесії Odoo, який всередині запускає фіскалізацію в Checkbox
+                session.action_pos_session_close()
+
+                if session.state == 'closed' and not session.stop_at:
+                    session.stop_at = fields.Datetime.now()
+
+                if session.state != 'closed':
+                    session.action_pos_session_closing_control()
+                    if not session.stop_at:
+                        session.stop_at = fields.Datetime.now()
+
+            except Exception as e:
+                _logger.error(f"Крон ПРРО: Помилка закриття сесії {session.name}: {str(e)}")
