@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_product_template_plugit_delivery_base_plugit" model="ir.ui.view">
+        <field name="name">product.template.plugit.delivery.base</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='general_information']//group[@name='group_standard_price']" position="after">
+                <group string="Розміри (см)" name="group_dimensions">
+                    <field name="product_width"/>
+                    <field name="product_length"/>
+                    <field name="product_depth"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_ukrposhta_ttn_list" model="ir.ui.view">
+        <field name="name">plugit.ukrposhta.ttn.list</field>
+        <field name="model">plugit.ukrposhta_ttn</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="stock_picking_id"/>
+                <field name="create_date" widget="date"/>
+                <field name="delivery_date" widget="date"/>
+                <field name="sender_id"/>
+                <field name="ttn_number"/>
+                <field name="status"
+                       decoration-success="status == 'delivered'"
+                       decoration-info="status in ('wait_for_send', 'in_progress')"
+                       decoration-danger="status == 'error'"
+                       decoration-muted="status == 'deleted'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ukrposhta_ttn_search" model="ir.ui.view">
+        <field name="name">plugit.ukrposhta.ttn.search</field>
+        <field name="model">plugit.ukrposhta_ttn</field>
+        <field name="arch" type="xml">
+            <search string="ТТН Укрпошти">
+                <field name="ttn_number"/>
+                <field name="stock_picking_id"/>
+                <field name="sender_id"/>
+                <filter string="Нові" name="new" domain="[('status', '=', 'new')]"/>
+                <filter string="Підготовлені" name="wait_for_send" domain="[('status', '=', 'wait_for_send')]"/>
+                <filter string="Відправлені" name="in_progress" domain="[('status', '=', 'in_progress')]"/>
+                <filter string="Доставлені" name="delivered" domain="[('status', '=', 'delivered')]"/>
+                <filter string="Помилки" name="error" domain="[('status', '=', 'error')]"/>
+                <separator/>
+                <filter string="Заархівовані" name="archived" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter string="Статус" name="group_by_status" context="{'group_by': 'status'}"/>
+                <filter string="Дата створення" name="group_by_create_date" context="{'group_by': 'create_date:day'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="ukrposhta_ttn_list_action" model="ir.actions.act_window">
+        <field name="name">ТТН Укрпошти</field>
+        <field name="res_model">plugit.ukrposhta_ttn</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_ukrposhta_ttn_search"/>
+    </record>
+</odoo>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="novaposhta_ttn_view_list" model="ir.ui.view">
+        <field name="name">plugit.novaposhta_ttn.list</field>
+        <field name="model">plugit.novaposhta_ttn</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="stock_picking_id" readonly="1" />
+                <field name="create_date" widget="date" />
+                <field name="delivery_date" widget="date" />
+                <field name="sender_id" />
+                <field name="main_partner_id" />
+                <field name="full_delivery_address" />
+                <field name="status" />
+                <field name="ttn_number" />
+            </list>
+        </field>
+    </record>
+
+    <!-- Search view -->
+    <record id="view_novaposhta_ttn_search" model="ir.ui.view">
+        <field name="name">plugit.novaposhta_ttn.search</field>
+        <field name="model">plugit.novaposhta_ttn</field>
+        <field name="arch" type="xml">
+            <search string="TTN Search">
+                <field name="main_partner_id" string="Контрагент" filter_domain="['|', ('main_partner_id.name', 'ilike', self), ('main_partner_id.vat', 'ilike', self)]"/>
+                <field name="ttn_number" string="Номер ТТН"/>
+
+                <!-- Status Filters -->
+                <filter string="Нові" name="new" domain="[('status', '=', 'new')]"/>
+                <filter string="Підготовлені" name="wait_for_send" domain="[('status', '=', 'wait_for_send')]"/>
+                <filter string="Відправлені" name="in_progress" domain="[('status', '=', 'in_progress')]"/>
+                <filter string="Доставлені" name="delivered" domain="[('status', '=', 'delivered')]"/>
+                <filter string="Помилки" name="error" domain="[('status', '=', 'error')]"/>
+                <filter string="На поверненні" name="returning" domain="[('status', '=', 'returning')]"/>
+                <separator/>
+
+                <!-- Archive Filter -->
+                <filter string="Заархівовані" name="archived" domain="[('active', '=', False)]"/>
+                <separator/>
+
+                <group name="Групувати за">
+                    <filter string="Статус" name="group_by_status" context="{'group_by': 'status'}"/>
+                    <filter string="Датою створення" name="group_by_create_date" context="{'group_by': 'create_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+
+    <record id="novaposhta_ttn_list_action" model="ir.actions.act_window">
+        <field name="name">TTN</field>
+        <field name="res_model">plugit.novaposhta_ttn</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_novaposhta_ttn_search"/>
+    </record>
+
+</odoo>

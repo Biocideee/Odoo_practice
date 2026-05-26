@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <menuitem id="np_menu_group" name="Нова Пошта" parent="stock.menu_stock_config_settings" groups="base.group_system,stock.group_stock_manager" sequence="60"/>
+
+    <menuitem
+    id="np_ttns_menu"
+    name="ТТН"
+    parent="np_menu_group"
+    sequence="10"
+    action="novaposhta_ttn_list_action"
+    groups="stock.group_stock_manager"
+  />
+    <menuitem
+    id="np_settlements_menu"
+    name="Населені пункти"
+    parent="np_menu_group"
+    sequence="20"
+    action="np_settlements_action"
+    groups="base.group_system"
+  />
+    <menuitem
+    id="np_streets_menu"
+    name="Вулиці"
+    parent="np_menu_group"
+    sequence="30"
+    action="np_streets_action"
+    groups="base.group_system"
+  />
+    <menuitem
+    id="np_warehouses_menu"
+    name="Відділення/Поштомати"
+    parent="np_menu_group"
+    sequence="40"
+    action="np_warehouses_action"
+    groups="base.group_system"
+  />
+
+</odoo>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_novaposhta_ttn_form_action" model="ir.ui.view">
+        <field name="name">plugit.novaposhta.ttn</field>
+        <field name="model">plugit.novaposhta_ttn</field>
+        <field name="arch" type="xml">
+            <form create="0">
+                <field name="np_target_type" invisible="1" />
+                <header>
+                    <field name="partner_warning" invisible="1"/>
+                    <button type="object" name="action_send" string="Створити ТТН" invisible="ttn_number or partner_warning"/>
+                    <button type="object" name="action_recreate_ttn" string="Перестворити" invisible="status != 'wait_for_send'" class="oe_highlight"/>
+                    <button type="object" name="action_show_label_a4" string="Друк A4" invisible="not ttn_number"/>
+                    <button type="object" name="action_show_label_zebra" string="Друк Zebra" invisible="not ttn_number"/>
+                    <field name="status" widget="statusbar"/>
+                </header>
+                <div class="alert alert-warning" role="alert" invisible="not partner_warning">
+                    Увага!!! <field name="partner_warning" string="" readonly="1" class="oe_inline"/>
+                </div>
+                <div class="alert alert-warning" role="alert" invisible="not novaposhta_show_error">
+                    Увага!!! Не встановлен ключ Нової Пошти або заданий спосіб доставки заархівований
+                </div>
+
+                <sheet>
+                    <group>
+                        <field name="description" readonly="ttn_number" required="1"/>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="stock_picking_id" readonly="1" />
+                            <field name="main_partner_id" readonly="1" />
+                            <field name="contact_name" readonly="1" />
+                            <field name="contact_middle_name" readonly="1" required="np_target_type == 'courier'"/>
+                            <field name="contact_surname" readonly="1" />
+                            <field name="phone" readonly="1" />
+                            <separator/>
+                            <field name="sender_id" invisible="ttn_number" domain="[('id', 'in', available_sender_ids), ('carrier_type', '=', 'novaposhta')]" options="{'no_open': True}"/>
+                            <field name="sender_address" invisible="not ttn_number"/>
+                            <field name="full_delivery_address" readonly="1"/>
+                            <field name="service_type" readonly="1" />
+                        </group>
+                        <group>
+                            <field name="delivery_date" readonly="ttn_number" widget="date" />
+                            <field name="cost" readonly="ttn_number" />
+                            <field name="novaposhta_payment_type" readonly="ttn_number" widget="radio" options="{'horizontal': true}"/>
+                            <field name="novaposhta_payment_side" readonly="ttn_number" widget="radio" options="{'horizontal': true}"/>
+                            <field name="back_payment" readonly="ttn_number" />
+                            <field name="cost" string="Сума післяплати" readonly="1" help="Дорівнює вартості відправлення" />
+                            <field name="ttn_number" readonly="1" />
+                            <field name="create_date" widget="date" readonly="1" />
+                            <field name="delivery_cost" readonly="1"/>
+<!--                            <field name="status" readonly="1"/>-->
+                            <field name="error" readonly="1" invisible="not error"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Місця">
+                            <field name="seat_ids" readonly="ttn_number">
+                                <list editable="bottom" open_form_view="False">
+                                    <field name="sequence" widget="handle" />
+                                    <field name="volume" />
+                                    <field name="width" />
+                                    <field name="length" />
+                                    <field name="height" />
+                                    <field name="weight" />
+                                    <field name="description" />
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="novaposhta_ttn_action">
+        <field name="name">TTN form</field>
+        <field name="res_model">plugit.novaposhta_ttn</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_novaposhta_ttn_form_action" />
+    </record>
+
+</odoo>

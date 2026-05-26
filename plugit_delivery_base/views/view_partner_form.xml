@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="carrier_view_partner_form_plugit" model="ir.ui.view">
+        <field name="name">carrier.res.partner.form.plugit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="priority">1000</field>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="attributes">
+                <attribute name="invisible">type != 'contact'</attribute>
+            </xpath>
+
+             <xpath
+                expr="//group[.//span[@name='address_name']]/following-sibling::group[1]"
+                position="attributes"
+            >
+                <attribute name="invisible">type == 'delivery'</attribute>
+            </xpath>
+
+            <xpath expr="//notebook/page[@name='contact_addresses']//form/sheet//field[@name='name']" position="before">
+                <field name="carrier_id" id="carrier-id-inner" invisible="type !='delivery'" options="{'no_open': True}"/>
+            </xpath>
+
+            <!-- Start of block Delivery contact inside the main form -->
+            <xpath
+                expr="//group[.//span[@name='address_name']]/following-sibling::group[1]"
+                position="after"
+            >
+                <group invisible="type != 'delivery' ">
+                    <field name="phone" widget="phone"/>
+                    <field name="contact_person_name" />
+                    <field name="contact_person_surname"/>
+                    <field name="category_id" widget="many2many_tags" options="{'color_field': 'color'}"
+                                   placeholder='e.g. "B2B", "VIP", "Consulting", ...'/>
+                </group>
+            </xpath>
+            <!-- End of block Delivery contact inside the main form -->
+
+            <!-- Contacts in modal form -->
+            <xpath expr="//form//form/sheet//field[@name='phone']" position="after">
+                <!-- Start of block Delivery contact inside the popup address form -->
+                <field name="contact_person_name" invisible="type != 'delivery'" />
+                <field name="contact_person_surname" invisible="type != 'delivery'" />
+                <!-- End of block Delivery contact inside the popup address form -->
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

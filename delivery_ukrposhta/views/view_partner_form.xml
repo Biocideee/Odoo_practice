@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="carrier_view_partner_form_inherit_ukrposhta" model="ir.ui.view">
+        <field name="name">carrier.res.partner.form.inherit.ukrposhta</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="priority">1100</field>
+        <field name="arch" type="xml">
+            <!--
+                Адресні поля Укрпошти. Якорь — поле `city`, яке є у базовому
+                адресному блоці v19. Поля з'являються після City у списку
+                адресних рядків.
+            -->
+            <xpath expr="//field[@name='city']" position="after">
+                <field name="ukrposhta_district"
+                       placeholder="Район"
+                       invisible="type != 'delivery' or carrier_type != 'ukrposhta'"/>
+                <field name="ukrposhta_region"
+                       placeholder="Область"
+                       invisible="type != 'delivery' or carrier_type != 'ukrposhta'"/>
+            </xpath>
+
+            <!--
+                plugit_delivery_base додає окрему групу справа для delivery-контактів
+                з полями phone, contact_person_name, contact_person_surname,
+                category_id. Ми вставляємо carrier_id перед contact_person_name —
+                так поле опиниться у потрібній групі поряд із Ім'я/Прізвище,
+                а не в заголовку поряд із phone-іконкою.
+            -->
+            <xpath expr="//field[@name='contact_person_name']" position="before">
+                <field name="carrier_id"
+                       string="Спосіб доставки"
+                       options="{'no_open': True}"
+                       invisible="type != 'delivery'"/>
+            </xpath>
+
+            <!--
+                Після прізвища додаємо по-батькові — корисно для УП,
+                але показуємо для будь-якого delivery-партнера.
+            -->
+            <xpath expr="//field[@name='contact_person_surname']" position="after">
+                <field name="contact_middle_name"
+                       string="По-батькові"
+                       invisible="type != 'delivery'"/>
+            </xpath>
+
+            <!--
+                house_number / apart_number — частина адреси, додаємо у адресний блок
+                після ukrposhta_district. Показуємо лише для delivery-партнерів.
+                Видимість незалежна від ukrposhta-carrier'а, бо ці поля корисні
+                для будь-якої адреси доставки.
+            -->
+            <xpath expr="//field[@name='ukrposhta_district']" position="after">
+                <field name="house_number"
+                       placeholder="Будинок"
+                       invisible="type != 'delivery'"/>
+                <field name="apart_number"
+                       placeholder="Квартира"
+                       invisible="type != 'delivery'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

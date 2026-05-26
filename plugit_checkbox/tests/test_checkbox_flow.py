@@ -8,6 +8,7 @@
 from unittest.mock import MagicMock, patch
 import requests
 from odoo.exceptions import UserError
+from odoo.orm.models import BaseModel
 from odoo.tests.common import TransactionCase
 
 

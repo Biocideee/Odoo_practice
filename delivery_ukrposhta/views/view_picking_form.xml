@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_inventory_form_inherit_ukrposhta" model="ir.ui.view">
+        <field name="name">inventory.form.inherit.ukrposhta</field>
+        <field name="model">stock.picking</field>
+        <field name="priority">1100</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <!-- Сервісні поля для умов button'ів -->
+            <xpath expr="//form" position="inside">
+                <field name="carrier_type" invisible="1"/>
+                <field name="up_ttn" invisible="1"/>
+            </xpath>
+
+            <!-- Алерт про невалідну конфігурацію Укрпошти -->
+            <xpath expr="//header" position="after">
+                <div class="alert alert-warning" role="alert" invisible="not ukrposhta_show_error">
+                    Увага! Не задано API ключ Укрпошти або спосіб доставки заархівований
+                </div>
+            </xpath>
+
+            <!-- Кнопка "Створити ТТН Укрпошти" поруч із "Друк" -->
+            <xpath expr="//button[@name='do_print_picking']" position="after">
+                <button name="action_create_up_ttn"
+                        icon="fa-truck"
+                        string="Створити ТТН Укрпошти"
+                        type="object"
+                        invisible="carrier_type != 'ukrposhta' or up_ttn or ukrposhta_show_error or not partner_id or picking_type_code != 'outgoing'"/>
+            </xpath>
+
+            <!-- Кнопка "ТТН Укрпошти" (відкрити існуючу) -->
+            <xpath expr="//button[@name='action_see_packages']" position="after">
+                <button name="action_open_up_ttn"
+                        icon="fa-truck"
+                        string="ТТН Укрпошти"
+                        type="object"
+                        invisible="carrier_type != 'ukrposhta' or not up_ttn"/>
+            </xpath>
+
+            <!-- Поле повної адреси доставки під partner_id -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <label for="full_delivery_address"
+                       invisible="carrier_type != 'ukrposhta'"/>
+                <div invisible="carrier_type != 'ukrposhta'">
+                    <field name="carrier_id" class="oe_inline" readonly="1" force_save="1"/>,
+                    <field name="full_delivery_address" class="oe_inline" readonly="1" force_save="1"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

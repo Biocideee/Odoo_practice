@@ -1,0 +1,23 @@
+{
+    "name": "Plugit Delivery (base)",
+    "version": "19.0.1.0.0",
+    "summary": "Модуль управління доставкою (база)",
+    "description": "Локалізований інтерфейс управління доставкою",
+    "author": "Vadym Serdiuk",
+    "company": "Plugit",
+    "maintainer": "Plugit",
+    "depends": ["delivery", "sale", "base", "stock", "sale_stock"],
+    "assets": {},
+    "data": [
+        "views/view_partner_form.xml",
+        "views/sale_order_views.xml",
+        "views/stock_warehouse_views.xml",
+        "views/product_template_views.xml",
+        "views/menus.xml",
+    ],
+    "post_init_hook": "post_init_hook",
+    "images": ["static/description/icon.png"],
+    "license": "LGPL-3",
+    "installable": True,
+    "application": False,
+}

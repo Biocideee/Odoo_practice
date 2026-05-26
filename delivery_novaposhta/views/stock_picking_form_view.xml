@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_novaposhta_inventory_form_plugit" model="ir.ui.view">
+    <field name="name">inventory.form.plugit</field>
+    <field name="model">stock.picking</field>
+    <field name="priority">1000</field>
+    <field name="inherit_id" ref="stock.view_picking_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <field name="carrier_type" invisible="1" />
+            </xpath>
+            <xpath expr="//button[@name='do_print_picking']" position="after">
+                <button
+                  name="action_create_np_ttn"
+                  icon="fa-truck"
+                  string="Створити ТТН НП"
+                  type="object"
+                  invisible="carrier_type != 'novaposhta' or np_ttn_id or novaposhta_show_error or not ((partner_id and picking_type_code == 'outgoing') or (internal_partner_id and picking_type_code == 'internal'))"
+                />
+            </xpath>
+
+            <xpath expr="//button[@name='action_see_packages']" position="after">
+                <button
+                  name="action_open_np_ttn"
+                  icon="fa-truck"
+                  string="Нова Пошта"
+                  type="object"
+                  invisible="carrier_type != 'novaposhta' or not np_ttn_id"
+                />
+            </xpath>
+
+            <xpath expr="//header" position="after">
+                <div class="alert alert-warning" role="alert" invisible="not novaposhta_show_error">
+                    Увага!!! Не встановлен ключ Нової Пошти або заданий спосіб доставки заархівований
+                </div>
+            </xpath>
+
+            <xpath expr="//field[@name='backorder_id']" position="before">
+                <field name="carrier_id" invisible="picking_type_code != 'internal'" readonly="state in ('done', 'cancel')" />
+                <field name="internal_partner_id" invisible="picking_type_code != 'internal' or carrier_type != 'novaposhta'" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

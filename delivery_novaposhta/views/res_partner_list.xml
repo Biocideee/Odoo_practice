@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record model="ir.ui.view" id="view_partner_tree_plugit_delivery">
+        <field name="name">res.partner.list.plugit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='activity_ids']" position="after">
+                <field name="carrier_type" widget="selection" />
+                <field name="full_delivery_address" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="website_sale_address_form" inherit_id="website_sale.address">
+        <xpath expr="//form[@class='checkout_autoformat']" position="inside">
+            <form>
+                <t>
+                    <div>
+                        <label>Select type:</label>
+                        <select name="types" id="types">
+                            <option value=''>Оберіть тип</option>
+                            <t t-foreach="types" t-as="option">
+                                <option t-att-value="option[0]" t-att-selected="option[0] == selected_type">
+                                    <t t-esc="option[1]" />
+                                </option>
+                            </t>
+
+                        </select>
+                    </div>
+                    <div>
+                        <input type="text" name="contact_person_name" placeholder="Name" />
+                        <input type="text" name="contact_middle_name" placeholder="Middle name" />
+                        <input type="text" name="contact_person_surname" placeholder="Surname" />
+                    </div>
+                </t>
+            </form>
+        </xpath>
+    </template>
+</odoo>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_ukrposhta_ttn_action" model="ir.ui.view">
+        <field name="name">plugit.ukrposhta.ttn.form</field>
+        <field name="model">plugit.ukrposhta_ttn</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_send" type="object"
+                            string="Створити ТТН"
+                            class="oe_highlight"
+                            invisible="ukrposhta_id"/>
+                    <button name="action_recreate_ttn" type="object"
+                            string="Перестворити"
+                            invisible="status not in ('wait_for_send', 'error')"/>
+                    <field name="status" widget="statusbar"
+                           statusbar_visible="new,wait_for_send,in_progress,delivered"/>
+                </header>
+                <div class="alert alert-danger" role="alert" invisible="not error">
+                    <field name="error" readonly="1" nolabel="1"/>
+                </div>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="stock_picking_id" readonly="1"/>
+                            <field name="sender_id"
+                                   options="{'no_open': True}"
+                                   readonly="ukrposhta_id"/>
+                            <field name="available_sender_ids" invisible="1"/>
+                            <field name="sender_address" readonly="1" invisible="not sender_id"/>
+                            <field name="delivery_type" readonly="ukrposhta_id"/>
+                            <field name="type" readonly="ukrposhta_id"/>
+                            <field name="create_date" readonly="1"/>
+                            <field name="delivery_date"/>
+                        </group>
+                        <group>
+                            <field name="ttn_number" readonly="1" invisible="not ttn_number"/>
+                            <field name="ukrposhta_id" readonly="1" invisible="not ukrposhta_id"/>
+                            <field name="paid_by_recipient" readonly="ukrposhta_id"/>
+                            <field name="post_pay" readonly="ukrposhta_id"/>
+                            <field name="transfer_post_pay_to_bank_account"
+                                   readonly="ukrposhta_id"
+                                   invisible="not post_pay"/>
+                            <field name="fragile" readonly="ukrposhta_id"/>
+                            <field name="sms" readonly="ukrposhta_id"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Отримувач">
+                            <group>
+                                <group>
+                                    <field name="name_contact" readonly="ukrposhta_id"/>
+                                    <field name="surname" readonly="ukrposhta_id"/>
+                                    <field name="middle_name" readonly="ukrposhta_id"/>
+                                    <field name="phone" readonly="ukrposhta_id"/>
+                                </group>
+                                <group>
+                                    <field name="zip_code" readonly="ukrposhta_id"/>
+                                    <field name="region" readonly="ukrposhta_id"/>
+                                    <field name="district" readonly="ukrposhta_id"/>
+                                    <field name="city" readonly="ukrposhta_id"/>
+                                    <field name="street" readonly="ukrposhta_id"
+                                           invisible="delivery_type in ('W2W',)"/>
+                                    <field name="house_number" readonly="ukrposhta_id"
+                                           invisible="delivery_type in ('W2W',)"/>
+                                    <field name="apart_number" readonly="ukrposhta_id"
+                                           invisible="delivery_type in ('W2W',)"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Місця">
+                            <field name="parcel_ids" readonly="ukrposhta_id">
+                                <list editable="bottom" open_form_view="True">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="weight"/>
+                                    <field name="length"/>
+                                    <field name="height"/>
+                                    <field name="description"/>
+                                    <field name="declared_price"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="uuid" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="ukrposhta_ttn_action">
+        <field name="name">ТТН Укрпошти</field>
+        <field name="res_model">plugit.ukrposhta_ttn</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_ukrposhta_ttn_action"/>
+    </record>
+</odoo>

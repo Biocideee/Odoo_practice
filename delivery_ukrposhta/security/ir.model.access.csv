@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_plugit_ukrposhta_ttn_system,access.plugit.ukrposhta.ttn.system,model_plugit_ukrposhta_ttn,base.group_system,1,1,1,1
+access_plugit_ukrposhta_ttn_stock,access.plugit.ukrposhta.ttn.stock,model_plugit_ukrposhta_ttn,stock.group_stock_user,1,1,1,1
+access_plugit_ukrposhta_ttn_sales,access.plugit.ukrposhta.ttn.sales,model_plugit_ukrposhta_ttn,sales_team.group_sale_salesman_all_leads,1,1,1,1
+access_plugit_ukrposhta_ttn_user,access.plugit.ukrposhta.ttn.user,model_plugit_ukrposhta_ttn,base.group_user,1,0,0,0
+access_plugit_ukrposhta_ttn_parcels_system,access.plugit.ukrposhta.ttn.parcels.system,model_plugit_ukrposhta_ttn_parcels,base.group_system,1,1,1,1
+access_plugit_ukrposhta_ttn_parcels_stock,access.plugit.ukrposhta.ttn.parcels.stock,model_plugit_ukrposhta_ttn_parcels,stock.group_stock_user,1,1,1,1
+access_plugit_ukrposhta_ttn_parcels_sales,access.plugit.ukrposhta.ttn.parcels.sales,model_plugit_ukrposhta_ttn_parcels,sales_team.group_sale_salesman_all_leads,1,1,1,1
+access_plugit_ukrposhta_ttn_parcels_user,access.plugit.ukrposhta.ttn.parcels.user,model_plugit_ukrposhta_ttn_parcels,base.group_user,1,0,0,0

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="np_warehouse_view_list" model="ir.ui.view">
+        <field name="model">plugit.np_warehouse</field>
+        <field name="arch" type="xml">
+            <list string="Відділеня/Поштомати">
+                <field name="number" />
+                <field name="short_address" />
+                <field name="description" />
+            </list>
+        </field>
+    </record>
+
+    <record id="np_warehouses_action" model="ir.actions.act_window">
+        <field name="name">Відділення/Поштомати</field>
+        <field name="res_model">plugit.np_warehouse</field>
+        <field name="view_mode">list</field>
+    </record>
+</odoo>

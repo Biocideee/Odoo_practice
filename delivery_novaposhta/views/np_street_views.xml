@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="np_street_view_list" model="ir.ui.view">
+        <field name="model">plugit.np_street</field>
+        <field name="arch" type="xml">
+            <list string="Вулиці">
+                <field name="item_name" />
+                <field name="ref" optional="hide" />
+                <field name="np_settlement_id" optional="hide" />
+                <field name="name" optional="hide" />
+                <field name="name_ru" optional="hide" />
+                <field name="street_type" optional="hide" />
+            </list>
+        </field>
+    </record>
+
+    <record id="np_streets_action" model="ir.actions.act_window">
+        <field name="name">Вулиці</field>
+        <field name="res_model">plugit.np_street</field>
+        <field name="view_mode">list</field>
+    </record>
+</odoo>
