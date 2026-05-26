@@ -7,16 +7,16 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='integration_level']" position="before">
                 <field name="ukrposhta_test_api_key"
-                       invisible="delivery_type != 'ukrposhta'"
+                       invisible="delivery_type != 'ukrposhta' or prod_environment"
                        password="True"/>
                 <field name="ukrposhta_production_api_key"
-                       invisible="delivery_type != 'ukrposhta'"
+                       invisible="delivery_type != 'ukrposhta' or not prod_environment"
                        password="True"/>
                 <field name="ukrposhta_test_token"
-                       invisible="delivery_type != 'ukrposhta'"
+                       invisible="delivery_type != 'ukrposhta' or prod_environment"
                        password="True"/>
                 <field name="ukrposhta_production_token"
-                       invisible="delivery_type != 'ukrposhta'"
+                       invisible="delivery_type != 'ukrposhta' or not prod_environment"
                        password="True"/>
             </xpath>
         </field>

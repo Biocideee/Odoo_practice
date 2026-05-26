@@ -10,6 +10,7 @@ class UkrposhtaTtnParcels(models.Model):
     ukrposhta_ttn_id = fields.Many2one("plugit.ukrposhta_ttn", string="ТТН Укрпошти", ondelete="cascade")
     weight = fields.Float(string="Вага, кг")
     length = fields.Float(string="Довжина, см")
+    width = fields.Float(string="Ширина, см")
     height = fields.Float(string="Висота, см")
     description = fields.Char(string="Опис")
     uuid = fields.Char(string="UUID")

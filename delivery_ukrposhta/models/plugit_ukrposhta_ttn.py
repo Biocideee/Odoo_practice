@@ -45,9 +45,13 @@ delivery_type_list = [
     ("D2D", "Двері-Двері"),
 ]
 
+# Значення мають збігатися з enum'ом API УП (ShipmentType): UPPER_SNAKE_CASE.
+# Доступні також: SMARTBOX, INTERNATIONAL, DOCUMENT, CARGO, STANDARD_CARGO,
+# DOCUMENT_BACK, VALUABLE_LETTER, INTERNATIONAL_EXPORT_PLUS, INTERNATIONAL_CONSIGNMENT.
+# Залишаємо два найпоширеніші — Standard і Express.
 types = [
-    ("Express", "Express"),
-    ("Standard", "Standard"),
+    ("STANDARD", "Стандарт"),
+    ("EXPRESS", "Експрес"),
 ]
 
 
@@ -57,7 +61,7 @@ class UkrposhtaTtn(models.Model):
     _order = "create_date DESC, id DESC"
 
     name = fields.Char(compute="_compute_name")
-    stock_picking_id = fields.Many2one("stock.picking", string="Доставка", copy=False)
+    stock_picking_id = fields.Many2one("stock.picking", string="Доставка", copy=True)
     available_sender_ids = fields.Many2many(
         related="stock_picking_id.picking_type_id.warehouse_id.partner_ids",
     )
@@ -83,7 +87,7 @@ class UkrposhtaTtn(models.Model):
     )
 
     delivery_type = fields.Selection(delivery_type_list, string="Тип доставки", default="W2W", copy=True)
-    type = fields.Selection(types, string="Швидкість", default="Standard", copy=True)
+    type = fields.Selection(types, string="Швидкість", default="STANDARD", copy=True)
 
     # Контакт-поля: необов'язкові на рівні моделі, обов'язковість керується UI/onSubmit
     # (різні delivery_type вимагають різних полів).
@@ -175,6 +179,46 @@ class UkrposhtaTtn(models.Model):
             "target": "main",
         }
 
+    def action_show_label_a4(self):
+        """Завантажити PDF-етикетку формату A4."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/download/ukrposhta-label/{self.id}?page_format=A4",
+            "target": "self",
+        }
+
+    def action_show_label_zebra(self):
+        """Завантажити PDF-етикетку формату Zebra (термопринтер)."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/download/ukrposhta-label/{self.id}?page_format=Z",
+            "target": "self",
+        }
+
+    def action_cancel_ttn(self):
+        """
+        Скасувати ТТН в УП. Працює лише поки ТТН не у фінальному стані
+        (delivered/deleted). Викликає DELETE /shipments/{uuid} через carrier.
+        """
+        self.ensure_one()
+        if not self.ukrposhta_id:
+            return self._notify(_("ТТН ще не надіслана в УП"), success=False)
+        if self.status in ("delivered", "deleted"):
+            return self._notify(_("Не можна скасувати ТТН у статусі %s") % self.status, success=False)
+        try:
+            self.stock_picking_id.carrier_id.cancel_shipment(pickings=[self.stock_picking_id])
+        except (UkrposhtaAPIException, DeliveryAPIException) as exc:
+            _logger.exception("Ukrposhta cancel_ttn failed for ttn_id=%s", self.id)
+            self.write({"error": str(exc)})
+            return self._notify(_("Помилка скасування ТТН: %s") % str(exc), success=False)
+        except Exception as exc:
+            _logger.exception("Unexpected error cancelling Ukrposhta TTN id=%s", self.id)
+            self.write({"error": str(exc)})
+            return self._notify(_("Непередбачувана помилка: %s") % str(exc), success=False)
+        return self._notify(_("ТТН скасовано"), success=True)
+
     @staticmethod
     def _notify(message, success=True):
         return {
@@ -207,11 +251,18 @@ class UkrposhtaTtn(models.Model):
             ("ukrposhta_id", "!=", False),
             ("status", "not in", ("delivered", "deleted", "error")),
         ])
+        _logger.info(
+            "Ukrposhta status check: found %s TTN(s) to query",
+            len(records),
+        )
         # Групуємо за carrier, щоб не створювати конектор на кожен запис.
         by_carrier = {}
         for record in records:
             carrier = record.stock_picking_id.carrier_id
             if not carrier:
+                _logger.warning(
+                    "TTN id=%s has no carrier on its picking — skipping", record.id,
+                )
                 continue
             by_carrier.setdefault(carrier.id, (carrier, self.env["plugit.ukrposhta_ttn"]))
             by_carrier[carrier.id] = (carrier, by_carrier[carrier.id][1] | record)
@@ -223,9 +274,17 @@ class UkrposhtaTtn(models.Model):
                 _logger.exception("Failed to get Ukrposhta credentials for carrier %s", carrier.id)
                 continue
             if not api_key or not token:
+                _logger.warning(
+                    "Carrier %s has no Ukrposhta credentials — skipping %s TTN(s)",
+                    carrier.id, len(recs),
+                )
                 continue
             connector = UkrposhtaConnector(api_key, token, sandbox=sandbox)
             for record in recs:
+                _logger.info(
+                    "Querying Ukrposhta status for TTN id=%s uuid=%s",
+                    record.id, record.ukrposhta_id,
+                )
                 try:
                     api_status = connector.check_ttn_status(record.ukrposhta_id)
                 except (UkrposhtaAPIException, DeliveryAPIException):
@@ -237,7 +296,16 @@ class UkrposhtaTtn(models.Model):
                 lifecycle = (api_status or {}).get("lifecycle") or {}
                 raw_status = lifecycle.get("status")
                 if not raw_status:
+                    _logger.info(
+                        "TTN id=%s: API responded but no lifecycle.status — skipping",
+                        record.id,
+                    )
                     continue
                 new_status = API_STATUS_MAP.get(raw_status)
+                _logger.info(
+                    "TTN id=%s: API status='%s' mapped to '%s' (current: '%s')",
+                    record.id, raw_status, new_status, record.status,
+                )
                 if new_status and record.status != new_status:
                     record.write({"status": new_status})
+                    _logger.info("TTN id=%s status updated to '%s'", record.id, new_status)

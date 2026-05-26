@@ -98,7 +98,20 @@ class API:
 
     @staticmethod
     def _extract_error_message(payload):
-        """Витягнути зрозумілий текст помилки з відповіді сервера."""
+        """
+        Витягнути зрозумілий текст помилки з відповіді сервера.
+
+        УП повертає помилки у трьох форматах:
+          * JSON-dict із полем message/error/description (бізнес-валідація)
+          * JSON-list з dict-ами (масові помилки)
+          * XML-fault від WSO2 API Manager при auth-помилках, наприклад:
+              <ams:fault xmlns:ams="http://wso2.org/apimanager/security">
+                <ams:code>900901</ams:code>
+                <ams:message>Invalid Credentials</ams:message>
+                <ams:description>Access failure for API ...</ams:description>
+              </ams:fault>
+            Беремо саме <ams:description> — він людино-читабельний.
+        """
         if isinstance(payload, dict):
             for key in ("message", "errorMessage", "error", "description", "detail"):
                 if payload.get(key):
@@ -109,5 +122,20 @@ class API:
                 return API._extract_error_message(first)
             return str(first)
         if isinstance(payload, str):
+            # Спроба витягти ams:description з WSO2-XML
+            import re
+            match = re.search(
+                r"<ams:description>(.*?)</ams:description>",
+                payload, re.DOTALL,
+            )
+            if match:
+                return match.group(1).strip()
+            # Fallback на <ams:message>
+            match = re.search(
+                r"<ams:message>(.*?)</ams:message>",
+                payload, re.DOTALL,
+            )
+            if match:
+                return match.group(1).strip()
             return payload
         return None

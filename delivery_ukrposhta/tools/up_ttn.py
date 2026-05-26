@@ -9,10 +9,10 @@ logger = logging.getLogger(__name__)
 
 EXTERNAL_ID_PREFIX = "id-"
 
-# Мапа полів-адреси: ключ — атрибут партнера, значення — поле у payload Укрпошти.
+# Мапа простих полів-адреси: ключ — атрибут партнера, значення — поле у payload УП.
+# Поле region береться через state_id.name окремо (бо це related-many2one).
 ADDRESS_FIELDS_MAP = {
     "zip": "postcode",
-    "ukrposhta_region": "region",
     "ukrposhta_district": "district",
     "city": "city",
     "street": "street",
@@ -41,6 +41,10 @@ class UkrposhtaConnector:
         self.api_key = api_key
         self.token = token
         self.sandbox = sandbox
+        # Зберігає останній запит/відповідь, щоб carrier міг логувати їх
+        # через self.log_xml(...) — для debug-режиму.
+        self.last_request_payload = None
+        self.last_response_payload = None
 
     def _api(self):
         return API(api_key=self.api_key, sandbox=self.sandbox)
@@ -94,12 +98,15 @@ class UkrposhtaConnector:
         if not client_uuid:
             return None
         all_addresses = self.get_client_all_addresses(uuid=client_uuid) or []
+        partner_region = (partner.state_id and partner.state_id.name) or ""
         for entry in all_addresses:
             address = entry.get("address") or {}
-            if all(
+            simple_match = all(
                 (address.get(api_key) or "") == (getattr(partner, attr, "") or "")
                 for attr, api_key in ADDRESS_FIELDS_MAP.items()
-            ):
+            )
+            region_match = (address.get("region") or "") == partner_region
+            if simple_match and region_match:
                 return entry
         return None
 
@@ -107,7 +114,7 @@ class UkrposhtaConnector:
         return {
             "postcode": partner.zip or "",
             "country": "UA",
-            "region": getattr(partner, "ukrposhta_region", "") or "",
+            "region": (partner.state_id and partner.state_id.name) or "",
             "city": partner.city or "",
             "district": getattr(partner, "ukrposhta_district", "") or "",
             "street": partner.street or "",
@@ -175,18 +182,62 @@ class UkrposhtaConnector:
 
     # --- ТТН -----------------------------------------------------------
 
+    @staticmethod
+    def _kg_to_grams(weight_kg):
+        """
+        УП API оперує вагою у ГРАМАХ (integer), а Odoo зберігає у кг (float).
+        Якщо ваги нема — повертаємо 0 (на боці create_ttn буде валідовано).
+        Інакше — int(kg * 1000), щоб гарантувати ціле число для JSON-serialization.
+        """
+        return int(round((weight_kg or 0) * 1000))
+
+    @staticmethod
+    def _to_cm_int(value):
+        """Габарити — теж integer (см)."""
+        return int(round(value or 0))
+
     def _build_parcels_payload(self, parcels):
+        """
+        УП API чекає parcelNumber = 1, 2, 3... (наскрізна нумерація з 1).
+        Odoo-шний sequence використовується лише для UI-сортування (drag-handle),
+        у БД він зазвичай 10, 20, 30 за дефолтом — не підходить для API.
+        Тому беремо порядковий номер через enumerate, але рядки впорядковуємо
+        за sequence — щоб користувач міг змінювати порядок drag-handle'ом.
+
+        Вага конвертується кг→грами, габарити — округлені см як integer.
+        """
         payload = []
-        for parcel in parcels:
+        sorted_parcels = parcels.sorted(key=lambda p: (p.sequence or 0, p.id))
+        for idx, parcel in enumerate(sorted_parcels, start=1):
             payload.append({
-                "parcelNumber": parcel.sequence or 0,
-                "weight": parcel.weight or 0,
-                "length": parcel.length or 0,
-                "height": parcel.height or 0,
+                "parcelNumber": idx,
+                "weight": self._kg_to_grams(parcel.weight),
+                "length": self._to_cm_int(parcel.length),
+                "width": self._to_cm_int(getattr(parcel, "width", 0)),
+                "height": self._to_cm_int(parcel.height),
                 "description": parcel.description or "",
                 "declaredPrice": parcel.declared_price or 0,
             })
         return payload
+
+    def _shipment_dimensions(self, parcels):
+        """
+        УП API на /shipments окрім списку parcels вимагає shipment-level
+        weight, length, width, height — для обрахунку об'ємної ваги.
+        Берем:
+          * weight (грами) — сума ваги усіх парселів,
+          * length/width/height (см) — максимальні значення.
+        Усі числа — integer.
+        """
+        if not parcels:
+            return {"weight": 0, "length": 0, "width": 0, "height": 0}
+        total_weight_kg = sum((p.weight or 0) for p in parcels)
+        return {
+            "weight": self._kg_to_grams(total_weight_kg),
+            "length": self._to_cm_int(max((p.length or 0) for p in parcels)),
+            "width": self._to_cm_int(max((getattr(p, "width", 0) or 0) for p in parcels)),
+            "height": self._to_cm_int(max((p.height or 0) for p in parcels)),
+        }
 
     def create_ttn(self, sender_partner, ttn):
         """
@@ -207,13 +258,23 @@ class UkrposhtaConnector:
         if not parcels_payload:
             raise UserError("Додайте принаймні одне місце (parcel) до ТТН.")
 
+        # Нормалізація: API УП очікує enum-значення UPPERCASE (STANDARD, EXPRESS, ...).
+        # Захист на випадок старих записів у БД зі значенням "Standard"/"Express".
+        shipment_type = (ttn.type or "STANDARD").upper()
+        delivery_type = (ttn.delivery_type or "W2W").upper()
+        shipment_dims = self._shipment_dimensions(ttn.parcel_ids)
         data = {
             "sender": {"uuid": sender["uuid"]},
             "recipient": {"uuid": recipient["uuid"]},
-            "deliveryType": ttn.delivery_type or "W2W",
-            "type": ttn.type or "Standard",
+            "deliveryType": delivery_type,
+            "type": shipment_type,
             "paidByRecipient": bool(ttn.paid_by_recipient),
             "parcels": parcels_payload,
+            # shipment-level габарити для розрахунку об'ємної ваги
+            "weight": shipment_dims["weight"],
+            "length": shipment_dims["length"],
+            "width": shipment_dims["width"],
+            "height": shipment_dims["height"],
         }
         if ttn.post_pay:
             data["postPay"] = float(ttn.post_pay)
@@ -222,7 +283,10 @@ class UkrposhtaConnector:
             if value:
                 data[api_key] = bool(value)
 
-        return self._api().make_request(method="post", path="/shipments", params=self._params(), data=data)
+        self.last_request_payload = data
+        response = self._api().make_request(method="post", path="/shipments", params=self._params(), data=data)
+        self.last_response_payload = response
+        return response
 
     def check_ttn_status(self, ttn_uuid):
         return self._api().make_request(
@@ -230,3 +294,46 @@ class UkrposhtaConnector:
             path=f"/shipments/{ttn_uuid}",
             params=self._params(),
         )
+
+    def cancel_ttn(self, ttn_uuid):
+        """
+        Скасування ТТН в УП. Працює тільки якщо посилка ще не була відправлена
+        фізично. Повертає dict-відповідь сервера (зазвичай — оновлений статус).
+        """
+        self.last_request_payload = {"action": "cancel", "uuid": ttn_uuid}
+        response = self._api().make_request(
+            method="delete",
+            path=f"/shipments/{ttn_uuid}",
+            params=self._params(),
+        )
+        self.last_response_payload = response
+        return response
+
+    def get_ttn_label_pdf(self, ttn_uuid, page_format="A4"):
+        """
+        Завантажити PDF-етикетку (Sticker) для ТТН.
+
+        page_format:
+          * "A4" — повноформатна сторінка A4 (стандарт)
+          * "Z" — формат Zebra-стікера (термопринтер)
+
+        Повертає bytes — вміст PDF-файлу. Бо це бінарний контент, не json.
+        """
+        import requests as _requests  # імпортуємо локально, щоб не дублювати з up_api
+        api = self._api()
+        url = api.create_link(f"/shipments/{ttn_uuid}/sticker", url_type="forms")
+        params = self._params(format=page_format)
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Accept": "application/pdf",
+        }
+        try:
+            response = _requests.get(url, params=params, headers=headers, timeout=30)
+            response.raise_for_status()
+        except _requests.exceptions.RequestException as exc:
+            logger.error("Ukrposhta PDF label download failed: %s", exc)
+            raise UkrposhtaAPIException(
+                message=f"Не вдалось завантажити PDF-етикетку: {exc}",
+                status_code=getattr(getattr(exc, "response", None), "status_code", None),
+            )
+        return response.content

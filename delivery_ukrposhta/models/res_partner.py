@@ -4,9 +4,10 @@ from odoo import fields, models
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-    # Поля для адреси Укрпошти. У стандарті Odoo `region` та `district`
-    # відсутні (`state_id` — це область, окремого Char-у для району немає).
-    # Використовуємо власні поля з префіксом ukrposhta_, щоб не конфліктувати
-    # з можливими розширеннями інших модулів.
-    ukrposhta_region = fields.Char(string="Область (Укрпошта)")
+    # Область — використовуємо стандартне Odoo-поле `state_id` (Many2one на
+    # res.country.state). Дані вже є — для України Odoo підвантажує всі області
+    # через модуль `base.l10n`. Так уникнули дублювання та друкарських помилок.
+    #
+    # Район — окрема концепція, у стандарті Odoo нема Char-еквівалента, тому
+    # залишаємо як власне поле.
     ukrposhta_district = fields.Char(string="Район (Укрпошта)")

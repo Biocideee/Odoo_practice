@@ -55,6 +55,7 @@ class StockPicking(models.Model):
                 "sequence": 10,
                 "weight": 0.5,
                 "length": 10,
+                "width": 10,
                 "height": 10,
                 "description": "",
             })
@@ -73,7 +74,7 @@ class StockPicking(models.Model):
                 "default_middle_name": partner.contact_middle_name,
                 "default_surname": partner.contact_person_surname,
                 "default_zip_code": partner.zip,
-                "default_region": partner.ukrposhta_region or (partner.state_id and partner.state_id.name) or "",
+                "default_region": (partner.state_id and partner.state_id.name) or "",
                 "default_district": partner.ukrposhta_district or "",
                 "default_city": partner.city,
                 "default_street": partner.street,

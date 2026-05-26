@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!--
+        Власне меню "Укрпошта" — за зразком "Нова Пошта" з NP-модуля.
+        Стоїть на тому ж рівні, що й "Доставка", всередині
+        stock.menu_stock_config_settings (Склад → Налаштування).
+    -->
+    <menuitem id="up_menu_group"
+              name="Укрпошта"
+              parent="stock.menu_stock_config_settings"
+              groups="base.group_system,stock.group_stock_manager"
+              sequence="61"/>
+
+    <menuitem id="up_ttns_menu"
+              name="ТТН"
+              parent="up_menu_group"
+              sequence="10"
+              action="ukrposhta_ttn_list_action"
+              groups="stock.group_stock_manager"/>
+</odoo>

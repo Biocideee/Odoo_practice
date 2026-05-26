@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-    <menuitem id="menu_delivery_in_config_stock" name="Доставка" parent="stock.menu_stock_config_settings" sequence="4"/>
-    <menuitem id="sale_menu_action_delivery_carrier_form"
-        action="delivery.action_delivery_carrier_form"
-        parent="menu_delivery_in_config_stock"
-        name="Методи доставки"
-        sequence="4"/>
-
+<!--    <menuitem id="menu_delivery_in_config_stock" name="Доставка" parent="stock.menu_stock_config_settings"-->
+<!--              sequence="4"/>-->
+<!--    <menuitem id="sale_menu_action_delivery_carrier_form"-->
+<!--              action="delivery.action_delivery_carrier_form"-->
+<!--              parent="menu_delivery_in_config_stock"-->
+<!--              name="Методи доставки"-->
+<!--              sequence="4"/>-->
 </odoo>

@@ -10,9 +10,19 @@
                             string="Створити ТТН"
                             class="oe_highlight"
                             invisible="ukrposhta_id"/>
+                    <button name="action_show_label_a4" type="object"
+                            string="Друк A4"
+                            invisible="not ukrposhta_id"/>
+                    <button name="action_show_label_zebra" type="object"
+                            string="Друк Zebra"
+                            invisible="not ukrposhta_id"/>
                     <button name="action_recreate_ttn" type="object"
                             string="Перестворити"
                             invisible="status not in ('wait_for_send', 'error')"/>
+                    <button name="action_cancel_ttn" type="object"
+                            string="Скасувати ТТН"
+                            confirm="Скасувати цю ТТН в Укрпошти? Дію не можна відмінити."
+                            invisible="not ukrposhta_id or status in ('delivered', 'deleted')"/>
                     <field name="status" widget="statusbar"
                            statusbar_visible="new,wait_for_send,in_progress,delivered"/>
                 </header>
@@ -31,7 +41,7 @@
                             <field name="delivery_type" readonly="ukrposhta_id"/>
                             <field name="type" readonly="ukrposhta_id"/>
                             <field name="create_date" readonly="1"/>
-                            <field name="delivery_date"/>
+                            <field name="delivery_date" readonly="ukrposhta_id"/>
                         </group>
                         <group>
                             <field name="ttn_number" readonly="1" invisible="not ttn_number"/>
@@ -71,10 +81,17 @@
                         </page>
                         <page string="Місця">
                             <field name="parcel_ids" readonly="ukrposhta_id">
-                                <list editable="bottom" open_form_view="True">
+                                <!--
+                                    open_form_view="False" — без цього "Перегляд"
+                                    відкриває авто-згенеровану форму, у якій parent.readonly
+                                    не пропагується, і користувач може редагувати парсел
+                                    після відправлення ТТН. Інлайн-list повністю достатній.
+                                -->
+                                <list editable="bottom" open_form_view="False">
                                     <field name="sequence" widget="handle"/>
                                     <field name="weight"/>
                                     <field name="length"/>
+                                    <field name="width"/>
                                     <field name="height"/>
                                     <field name="description"/>
                                     <field name="declared_price"/>

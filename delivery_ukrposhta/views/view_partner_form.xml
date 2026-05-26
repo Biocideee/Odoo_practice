@@ -7,25 +7,24 @@
         <field name="priority">1100</field>
         <field name="arch" type="xml">
             <!--
-                Адресні поля Укрпошти. Якорь — поле `city`, яке є у базовому
-                адресному блоці v19. Поля з'являються після City у списку
-                адресних рядків.
+                ============================================================
+                ЗОВНІШНЯ ФОРМА (повна форма партнера)
+                ============================================================
             -->
+
+            <!-- Район у головному адресному блоці після City -->
             <xpath expr="//field[@name='city']" position="after">
                 <field name="ukrposhta_district"
                        placeholder="Район"
                        invisible="type != 'delivery' or carrier_type != 'ukrposhta'"/>
-                <field name="ukrposhta_region"
-                       placeholder="Область"
-                       invisible="type != 'delivery' or carrier_type != 'ukrposhta'"/>
             </xpath>
 
             <!--
-                plugit_delivery_base додає окрему групу справа для delivery-контактів
+                plugit_delivery_base додає у головну форму окрему групу справа
                 з полями phone, contact_person_name, contact_person_surname,
-                category_id. Ми вставляємо carrier_id перед contact_person_name —
-                так поле опиниться у потрібній групі поряд із Ім'я/Прізвище,
-                а не в заголовку поряд із phone-іконкою.
+                category_id (visible only when type='delivery'). Вставляємо
+                carrier_id перед contact_person_name — щоб поле опинилось
+                у тій же групі, а не в заголовку з phone-іконкою.
             -->
             <xpath expr="//field[@name='contact_person_name']" position="before">
                 <field name="carrier_id"
@@ -34,22 +33,14 @@
                        invisible="type != 'delivery'"/>
             </xpath>
 
-            <!--
-                Після прізвища додаємо по-батькові — корисно для УП,
-                але показуємо для будь-якого delivery-партнера.
-            -->
+            <!-- По-батькові після прізвища (у головній групі delivery-контакта) -->
             <xpath expr="//field[@name='contact_person_surname']" position="after">
                 <field name="contact_middle_name"
                        string="По-батькові"
                        invisible="type != 'delivery'"/>
             </xpath>
 
-            <!--
-                house_number / apart_number — частина адреси, додаємо у адресний блок
-                після ukrposhta_district. Показуємо лише для delivery-партнерів.
-                Видимість незалежна від ukrposhta-carrier'а, бо ці поля корисні
-                для будь-якої адреси доставки.
-            -->
+            <!-- Будинок/Квартира — частина адреси, після Району -->
             <xpath expr="//field[@name='ukrposhta_district']" position="after">
                 <field name="house_number"
                        placeholder="Будинок"
@@ -57,6 +48,43 @@
                 <field name="apart_number"
                        placeholder="Квартира"
                        invisible="type != 'delivery'"/>
+            </xpath>
+
+            <!--
+                ============================================================
+                ВНУТРІШНЯ ФОРМА (popup "Відкрити: Контакт")
+                ============================================================
+                Popup-форма embed-нута всередині батьківської як inner <form>
+                всередині <field name="child_ids">. Xpath '//form//form/sheet//'
+                цілить ТІЛЬКИ цю inner-форму, бо першу зовнішню вже не зачіпає.
+
+                ВАЖЛИВО: carrier_id у popup-і вже додається `plugit_delivery_base`
+                (xpath: //notebook/page[@name='contact_addresses']//form/sheet//
+                 field[@name='name'] position="before"). Не дублюємо.
+
+                Ми додаємо тільки:
+                  * contact_middle_name (по-батькові) — після прізвища
+                  * placeholder на існуючі firstname/surname/middle_name,
+                    щоб порожні поля не зливались з фоном popup'а
+            -->
+            <xpath expr="//form//form/sheet//field[@name='contact_person_surname']" position="after">
+                <field name="contact_middle_name"
+                       string="По-батькові"
+                       placeholder="По-батькові"
+                       invisible="type != 'delivery'"/>
+            </xpath>
+
+            <!--
+                Додаємо placeholder'и до полів, які plugit_delivery_base ставить
+                в popup без них. Без placeholder'а порожнє поле виглядає
+                як пустий простір білого кольору — користувач не розуміє,
+                куди клікнути.
+            -->
+            <xpath expr="//form//form/sheet//field[@name='contact_person_name']" position="attributes">
+                <attribute name="placeholder">Ім'я</attribute>
+            </xpath>
+            <xpath expr="//form//form/sheet//field[@name='contact_person_surname']" position="attributes">
+                <attribute name="placeholder">Прізвище</attribute>
             </xpath>
         </field>
     </record>
