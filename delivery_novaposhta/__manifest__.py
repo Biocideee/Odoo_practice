@@ -4,7 +4,7 @@
     "author": "Vadym Serdiuk",
     "company": "Plugit",
     "website": "https://plugit.com.ua",
-    "depends": ["plugit_delivery_base", "queue_job", "mail"],
+    "depends": ["plugit_delivery_base", "kw_phone_number_ua", "queue_job", "mail", "queue_job_cron_jobrunner"],
     "summary": "Інтеграція з Новою Поштою",
     "description": "Додай інструмент взаємодії з Новою Поштою. "
     "Отримай актуальний список відділень та поштоматів кожного дня. "

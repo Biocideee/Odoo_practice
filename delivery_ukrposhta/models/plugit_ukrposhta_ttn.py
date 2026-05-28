@@ -72,6 +72,7 @@ class UkrposhtaTtn(models.Model):
         domain="[('id', 'in', available_sender_ids), ('carrier_type', '=', 'ukrposhta')]",
     )
     sender_address = fields.Char(related="sender_id.full_delivery_address", string="Адреса відправника")
+    full_delivery_address = fields.Char(string="Адреса доставки", copy=True)
     create_date = fields.Datetime(string="Створено")
     delivery_date = fields.Datetime(string="Дата відвантаження")
 
@@ -119,7 +120,7 @@ class UkrposhtaTtn(models.Model):
         """
         Створюємо лише запис ТТН — без автоматичної відправки на сервер
         Укрпошти. Відправка відбувається окремо через action_send(), що
-        дозволяє користувачу зберегти чернетку (NP робить так само).
+        дозволяє користувачу зберегти чернетку (в НП так само).
         """
         records = super().create(vals_list)
         return records
@@ -137,8 +138,7 @@ class UkrposhtaTtn(models.Model):
 
     def action_send(self):
         """
-        Відправити ТТН на сервер Укрпошти. Помилку API не пробрасуємо
-        стактрейсом у user — показуємо красиве сповіщення.
+        Відправити ТТН на сервер Укрпошти. Показуємо сповіщення.
         """
         self.ensure_one()
         if self.ukrposhta_id:

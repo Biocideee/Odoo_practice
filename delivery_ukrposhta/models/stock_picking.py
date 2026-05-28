@@ -69,6 +69,7 @@ class StockPicking(models.Model):
             "context": {
                 "default_stock_picking_id": self.id,
                 "default_sender_id": default_sender and default_sender.id,
+                "default_full_delivery_address": partner.full_delivery_address,
                 "default_phone": partner.phone,
                 "default_name_contact": partner.contact_person_name,
                 "default_middle_name": partner.contact_middle_name,
