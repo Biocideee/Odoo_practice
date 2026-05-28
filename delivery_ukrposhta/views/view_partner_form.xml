@@ -24,7 +24,7 @@
                        invisible="type != 'delivery' or carrier_type != 'ukrposhta'"/>
             </xpath>
 
-
+            <!-- Приховування полів у внутрішній формі -->
             <xpath expr="//form//form/sheet//div[@name='div_address']" position="attributes">
                 <attribute name="invisible" separator="or" add="carrier_type == 'ukrposhta'"/>
             </xpath>
@@ -41,7 +41,7 @@
 
             <xpath expr="//notebook/page[@name='contact_addresses']//form/sheet//field[@name='phone' and not(ancestor::group[@name='np_contact_details'])]"
                    position="attributes">
-               <attribute name="invisible" separator="or" add="carrier_type == 'ukrposhta'"/>
+                <attribute name="invisible" separator="or" add="carrier_type == 'ukrposhta'"/>
             </xpath>
 
             <xpath expr="//notebook/page[@name='contact_addresses']//form/sheet//field[@name='contact_person_name' and not(ancestor::group[@name='np_contact_details'])]"
@@ -55,6 +55,16 @@
             </xpath>
 
             <xpath expr="//notebook/page[@name='contact_addresses']//form/sheet//field[@name='name' and not(ancestor::group)]"
+                   position="attributes">
+                <attribute name="invisible" separator="or" add="carrier_type == 'ukrposhta'"/>
+            </xpath>
+
+            <xpath expr="//notebook/page[@name='contact_addresses']//form/sheet//*[hasclass('fa-envelope')]"
+                   position="attributes">
+                <attribute name="invisible" separator="or" add="carrier_type == 'ukrposhta'"/>
+            </xpath>
+
+            <xpath expr="//notebook/page[@name='contact_addresses']//form/sheet//*[hasclass('fa-phone')]"
                    position="attributes">
                 <attribute name="invisible" separator="or" add="carrier_type == 'ukrposhta'"/>
             </xpath>
@@ -73,16 +83,17 @@
 
                         <group>
                             <field name="street" string="Вулиця"/>
-
-                            <label for="house_number" string="Буд. / Кв."/>
-                            <div class="o_row">
-                                <field name="house_number" placeholder="Буд."/>
-                                <span>/ кв.</span>
-                                <field name="apart_number" placeholder="Кв."/>
-                            </div>
-
-                            <field name="phone" string="Телефон отримувача" widget="phone"/>
+                            <field name="house_number" string="Буд."/>
+                            <field name="apart_number" string="Кв."/>
+                            <field name="phone" string="Телефон" widget="phone"/>
                         </group>
+
+                        <group>
+                            <field name="contact_person_surname" string="Прізвище"/>
+                            <field name="contact_person_name" string="Ім'я"/>
+                            <field name="contact_middle_name" string="По-батькові"/>
+                        </group>
+
                     </group>
 
                     <group invisible="carrier_type != 'ukrposhta'">
