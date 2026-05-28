@@ -9,7 +9,8 @@ class TargetTypes:
     courier = "courier"
 
 
-target_type_list = [(TargetTypes.warehouse, "Поштове відділення"), (TargetTypes.poshtomat, "Поштомат"), (TargetTypes.courier, "Адреса")]
+target_type_list = [(TargetTypes.warehouse, "Поштове відділення"), (TargetTypes.poshtomat, "Поштомат"),
+                    (TargetTypes.courier, "Адреса")]
 
 
 class PlugitNovaposhtaPartner(models.Model):
@@ -79,8 +80,9 @@ class PlugitNovaposhtaPartner(models.Model):
         # Just extend the depends decorator
         super()._compute_full_delivery_address()
 
-    @api.onchange("carrier_type", "np_target_type", "np_settlement_id", "np_street_id", "np_warehouse_id", "house_number", "apart_number")
+    @api.onchange("carrier_type", "np_target_type", "np_settlement_id", "np_street_id", "np_warehouse_id",
+                  "house_number", "apart_number")
     def _update_contact_name(self):
-        if self.type == "delivery":
+        if self.type == "delivery" and self.carrier_type == "novaposhta":
             self.get_full_address(self)
             self.name = self.full_delivery_address

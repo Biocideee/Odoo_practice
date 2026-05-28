@@ -7,21 +7,14 @@
         <field name="priority">1100</field>
         <field name="arch" type="xml">
             <!--
-                Інформаційне поле повної адреси доставки — readonly,
-                для зручності бачити куди їде відправлення на формі quotation.
-                В Odoo 19 payment_term_id — стабільний якір на верхньому рівні форми.
-            -->
-            <xpath expr="//field[@name='payment_term_id']" position="after">
-                <label for="full_delivery_address" string="Адреса доставки"/>
-                <div>
-                    <field name="full_delivery_address" class="oe_inline" readonly="1" force_save="1"/>
-                </div>
-            </xpath>
-
-            <!--
                 Editable carrier_id у Other Info → DELIVERY секції.
                 Стандартна поведінка Odoo: при виборі carrier'а він автоматично
                 підставляється на picking при підтвердженні замовлення.
+
+                ПРИМІТКА: відображення адреси доставки уже додає
+                plugit_delivery_base (sale_order_views.xml), тому окремий
+                блок з full_delivery_address тут не потрібен — інакше виходить
+                дублювання на формі.
             -->
             <xpath expr="//field[@name='warehouse_id']" position="after">
                 <field name="carrier_id"

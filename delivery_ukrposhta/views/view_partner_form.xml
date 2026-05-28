@@ -6,86 +6,91 @@
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="priority">1100</field>
         <field name="arch" type="xml">
-            <!--
-                ============================================================
-                ЗОВНІШНЯ ФОРМА (повна форма партнера)
-                ============================================================
-            -->
 
-            <!-- Район у головному адресному блоці після City -->
             <xpath expr="//field[@name='city']" position="after">
                 <field name="ukrposhta_district"
-                       placeholder="Район"
+                       placeholder="Район (опціонально)"
                        invisible="type != 'delivery' or carrier_type != 'ukrposhta'"/>
             </xpath>
 
-            <!--
-                plugit_delivery_base додає у головну форму окрему групу справа
-                з полями phone, contact_person_name, contact_person_surname,
-                category_id (visible only when type='delivery'). Вставляємо
-                carrier_id перед contact_person_name — щоб поле опинилось
-                у тій же групі, а не в заголовку з phone-іконкою.
-            -->
-            <xpath expr="//field[@name='contact_person_name']" position="before">
-                <field name="carrier_id"
-                       string="Спосіб доставки"
-                       options="{'no_open': True}"
-                       invisible="type != 'delivery'"/>
-            </xpath>
-
-            <!-- По-батькові після прізвища (у головній групі delivery-контакта) -->
-            <xpath expr="//field[@name='contact_person_surname']" position="after">
-                <field name="contact_middle_name"
-                       string="По-батькові"
-                       invisible="type != 'delivery'"/>
-            </xpath>
-
-            <!-- Будинок/Квартира — частина адреси, після Району -->
             <xpath expr="//field[@name='ukrposhta_district']" position="after">
                 <field name="house_number"
                        placeholder="Будинок"
-                       invisible="type != 'delivery'"/>
+                       class="o_address_city"
+                       invisible="type != 'delivery' or carrier_type != 'ukrposhta'"/>
                 <field name="apart_number"
                        placeholder="Квартира"
-                       invisible="type != 'delivery'"/>
+                       class="o_address_city"
+                       invisible="type != 'delivery' or carrier_type != 'ukrposhta'"/>
             </xpath>
 
-            <!--
-                ============================================================
-                ВНУТРІШНЯ ФОРМА (popup "Відкрити: Контакт")
-                ============================================================
-                Popup-форма embed-нута всередині батьківської як inner <form>
-                всередині <field name="child_ids">. Xpath '//form//form/sheet//'
-                цілить ТІЛЬКИ цю inner-форму, бо першу зовнішню вже не зачіпає.
 
-                ВАЖЛИВО: carrier_id у popup-і вже додається `plugit_delivery_base`
-                (xpath: //notebook/page[@name='contact_addresses']//form/sheet//
-                 field[@name='name'] position="before"). Не дублюємо.
-
-                Ми додаємо тільки:
-                  * contact_middle_name (по-батькові) — після прізвища
-                  * placeholder на існуючі firstname/surname/middle_name,
-                    щоб порожні поля не зливались з фоном popup'а
-            -->
-            <xpath expr="//form//form/sheet//field[@name='contact_person_surname']" position="after">
-                <field name="contact_middle_name"
-                       string="По-батькові"
-                       placeholder="По-батькові"
-                       invisible="type != 'delivery'"/>
+            <xpath expr="//form//form/sheet//div[@name='div_address']" position="attributes">
+                <attribute name="invisible" separator="or" add="carrier_type == 'ukrposhta'"/>
             </xpath>
 
-            <!--
-                Додаємо placeholder'и до полів, які plugit_delivery_base ставить
-                в popup без них. Без placeholder'а порожнє поле виглядає
-                як пустий простір білого кольору — користувач не розуміє,
-                куди клікнути.
-            -->
-            <xpath expr="//form//form/sheet//field[@name='contact_person_name']" position="attributes">
-                <attribute name="placeholder">Ім'я</attribute>
+            <xpath expr="//notebook/page[@name='contact_addresses']//form/sheet/group[@name='other_info']/group/span[hasclass('o_address_type')]"
+                   position="attributes">
+                <attribute name="invisible" separator="or" add="carrier_type == 'ukrposhta'"/>
             </xpath>
-            <xpath expr="//form//form/sheet//field[@name='contact_person_surname']" position="attributes">
-                <attribute name="placeholder">Прізвище</attribute>
+
+            <xpath expr="//notebook/page[@name='contact_addresses']//form/sheet//field[@name='email' and not(ancestor::group[@name='np_contact_details'])]"
+                   position="attributes">
+                <attribute name="invisible" separator="or" add="carrier_type == 'ukrposhta'"/>
             </xpath>
+
+            <xpath expr="//notebook/page[@name='contact_addresses']//form/sheet//field[@name='phone' and not(ancestor::group[@name='np_contact_details'])]"
+                   position="attributes">
+               <attribute name="invisible" separator="or" add="carrier_type == 'ukrposhta'"/>
+            </xpath>
+
+            <xpath expr="//notebook/page[@name='contact_addresses']//form/sheet//field[@name='contact_person_name' and not(ancestor::group[@name='np_contact_details'])]"
+                   position="attributes">
+                <attribute name="invisible" separator="or" add="carrier_type == 'ukrposhta'"/>
+            </xpath>
+
+            <xpath expr="//notebook/page[@name='contact_addresses']//form/sheet//field[@name='contact_person_surname' and not(ancestor::group[@name='np_contact_details'])]"
+                   position="attributes">
+                <attribute name="invisible" separator="or" add="carrier_type == 'ukrposhta'"/>
+            </xpath>
+
+            <xpath expr="//notebook/page[@name='contact_addresses']//form/sheet//field[@name='name' and not(ancestor::group)]"
+                   position="attributes">
+                <attribute name="invisible" separator="or" add="carrier_type == 'ukrposhta'"/>
+            </xpath>
+
+            <xpath expr="//form//form/sheet//field[@name='carrier_id']" position="after">
+
+                <div invisible="carrier_type != 'ukrposhta' or type != 'delivery'">
+
+                    <group string="Контактні дані">
+                        <group>
+                            <field name="zip" string="Поштовий індекс"/>
+                            <field name="state_id" string="Область" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="ukrposhta_district" string="Район"/>
+                            <field name="city" string="Місто / Н.П."/>
+                        </group>
+
+                        <group>
+                            <field name="street" string="Вулиця"/>
+
+                            <label for="house_number" string="Буд. / Кв."/>
+                            <div class="o_row">
+                                <field name="house_number" placeholder="Буд."/>
+                                <span>/ кв.</span>
+                                <field name="apart_number" placeholder="Кв."/>
+                            </div>
+
+                            <field name="phone" string="Телефон отримувача" widget="phone"/>
+                        </group>
+                    </group>
+
+                    <group invisible="carrier_type != 'ukrposhta'">
+                        <field name="name" string="Адреса доставки" readonly="1"/>
+                    </group>
+                </div>
+            </xpath>
+
         </field>
     </record>
 </odoo>
